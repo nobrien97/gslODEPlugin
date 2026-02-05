@@ -15,11 +15,7 @@ class ODESystemLoader
 
         const ODEInfo* info = get_fn();
         
-        ODESystem sys;
-        sys._n_pars = info->n_pars;
-        sys._n_vars = info->n_vars;
-        sys._func = std::function<std::remove_pointer<func>::type>(info->ode_func);
-        sys._jac = std::function<std::remove_pointer<jac>::type>(info->ode_jac);
+        ODESystem sys(info->ode_func, info->ode_jac, info->n_vars, info->n_pars);
         return sys;
     }
 };
