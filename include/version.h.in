@@ -1,0 +1,4 @@
+// Version numbers
+#define ODEPluginTest_VERSION_MAJOR @ODEPluginTest_VERSION_MAJOR@
+#define ODEPluginTest_VERSION_MINOR @ODEPluginTest_VERSION_MINOR@
+#define ODEPluginTest_VERSION_PATCH @ODEPluginTest_VERSION_PATCH@
