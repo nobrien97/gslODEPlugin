@@ -14,7 +14,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-O3 -pthread -fopenmp")
 
 
+
 file(GLOB_RECURSE SOURCES src/*.cpp)
+list(FILTER SOURCES EXCLUDE REGEX "src/nar.cpp")
 
 # # Add GSL - this CMakeLists.txt is modified from Ben Haller's SLiM software (https://github.com/MesserLab/SLiM), released under GPL 2.0
 # set(TARGET_NAME_GSL gsl)
@@ -24,11 +26,53 @@ file(GLOB_RECURSE SOURCES src/*.cpp)
 # target_include_directories(${TARGET_NAME_GSL} PUBLIC ${GSL_INCLUDES})
 
 find_package(GSL REQUIRED)
+add_library(NAR MODULE "${PROJECT_SOURCE_DIR}/src/nar.cpp")
+add_library(Lorenz MODULE "${PROJECT_SOURCE_DIR}/src/lorenz.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
 "${PROJECT_BINARY_DIR}"
 "${PROJECT_SOURCE_DIR}/include"
 )
+
+target_include_directories(NAR PUBLIC
+"${PROJECT_BINARY_DIR}"
+"${PROJECT_SOURCE_DIR}/include"
+)
+
+target_include_directories(Lorenz PUBLIC
+"${PROJECT_BINARY_DIR}"
+"${PROJECT_SOURCE_DIR}/include"
+)
+
+
+if(CMAKE_DL_LIBS)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS} GSL::gsl)
+else()
 target_link_libraries(${PROJECT_NAME} PRIVATE GSL::gsl)
+endif()
+
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+include(CTest)
+enable_testing()
+message(STATUS "${PROJECT_SOURCE_DIR}")
+
+# test NAR
+add_test(
+  NAME testNAR
+  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_nar_test.csv -n ${PROJECT_SOURCE_DIR}/vars_nar_test.csv -o ${PROJECT_SOURCE_DIR}/out_nar.csv -i ${PROJECT_BINARY_DIR}/libNAR.so
+)
+
+# test Lorenz
+add_test(
+  NAME testLorenz
+  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.so
+)
+
+# Test multi-library version
+add_test(
+  NAME testMulti
+  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_multi_test.csv -n ${PROJECT_SOURCE_DIR}/vars_multi_test.csv -o ${PROJECT_SOURCE_DIR}/out_multi.csv -i ${PROJECT_SOURCE_DIR}/lib_multi_test.csv
+)
+

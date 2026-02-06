@@ -1,5 +1,6 @@
 #include <string>
 #include <stdexcept>
+#include <iostream>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -28,9 +29,10 @@ private:
 	{
 		return nullptr;
 	}
+    std::cout << "Loaded library at " << path << std::endl;
 
 	return library;
- 
+
     }
 
     inline void CloseHandle()
@@ -40,7 +42,15 @@ private:
 
 	return;
 #endif
-    dlclose(_handle);
+    int closeError = dlclose(_handle);
+
+    if (closeError)
+    {
+        throw std::runtime_error("Unable to unload library, error code " + closeError);
+    }
+
+    std::cout << "Closed library at " << reinterpret_cast<size_t>(_handle) << std::endl;
+
     return; 
     }
 
@@ -51,7 +61,7 @@ public:
         if (_handle == nullptr)
         {
             // Throw an error
-            throw std::runtime_error("Unable to find library at path");
+            throw std::runtime_error("Unable to find library at path " + path);
         }
     };
 
@@ -78,14 +88,14 @@ public:
     inline F GetSymbol(const std::string& name) const 
     {
 #if _WIN32
-        auto symbol = GetProcAddress((HINSTANCE)handle_, name->c_str());
+        auto symbol = GetProcAddress((HINSTANCE)_handle, name.c_str());
         if (!symbol)
         {
             throw std::runtime_error("Unable to find symbol in library");
         }
         return reinterpret_cast<F>(symbol);
 #endif
-        auto symbol = dlsym(handle_, name->c_str());
+        auto symbol = dlsym(_handle, name.c_str());
 
         if (!symbol)
         {

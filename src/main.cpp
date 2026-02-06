@@ -5,6 +5,7 @@
 #include "rapidcsv.h"
 #include "gsl/gsl_odeiv2.h"
 #include <iostream>
+#include <memory>
 
 
 
@@ -14,15 +15,11 @@
 
     const struct option longopts[] =
     {
-        { "input",    required_argument,    0,  'i' },
-        { "output",   required_argument,    0,  'o' },
-        { "system",   required_argument,    0,  's' },
-        { "help",           no_argument,    0,  'h' },
-        { "threads",  required_argument,    0,  't' }, 
-        { "optimum",  required_argument,    0,  'p' },
-        { "width",    required_argument,    0,  'w' },
-        { "opt_file", required_argument,    0,  'O' },
-        { "useGSL",         no_argument,    0,  'G' },
+        { "input",          required_argument,    0,  'i' },
+        { "output",         required_argument,    0,  'o' },
+        { "parameters",     required_argument,    0,  'p' },
+        { "help",           no_argument,          0,  'h' },
+        { "initial",        required_argument,    0,  'n' },
         {0,0,0,0}
     };
 
@@ -37,12 +34,21 @@ void doHelp(char* appname) {
     "-h             Print this help manual.\n"
     "\n"
     "-i             Specify input plugin path.\n"
-    "               Example: -i /path/to/file.so\n"
+    "               Example: -i /path/to/file.so OR -i /path/to/file.csv\n"
+    "               If a .csv is mentioned, each row should be a path to a different library.\n"
+    "               The number of rows must match the number of rows in the parameter/input files.\n"
     "               Input library should consist of a single class implementing all fields in 'ode_api.h'\n"
+    "-o             Specify output path.\n"
+    "               Example -o /path/to/output.csv\n"
     "-p             Specify input parameter path.\n"
     "               Example: -p /path/to/file.csv\n"
     "               Input .csv should have a column per parameter, each row being a parameter combination.\n"
     "               Number of columns must match the number of parameters defined in the plugin .so\n"
+    "-n             Specify initial values file path.\n"
+    "               Example: -n /path/to/file.csv\n"
+    "               Input .csv should have a column per variable\n"
+    "               Number of rows must match the number of parameter combinations.\n"
+    "               Number of columns must match the number of variables for the system.\n"
     "\n"
     "\n",
     ODEPluginTest_VERSION_MAJOR,
@@ -58,9 +64,11 @@ int main(int argc, char *argv[])
 {
     const struct option voptions[] = 
     {
-        { "help",       no_argument,        0,  'h' },
-        { "input",      required_argument,  0,  'i' },
-        { "parameters", required_argument,  0,  'p' },
+        { "help",        no_argument,        0,  'h' },
+        { "input",       required_argument,  0,  'i' },
+        { "output",      required_argument,  0,  'o' },
+        { "parameters",  required_argument,  0,  'p' },
+        { "initial",     required_argument,  0,  'n' },
         {0,0,0,0}
     };
 
@@ -68,22 +76,24 @@ int main(int argc, char *argv[])
     int options;
 
     std::string plugin_path;
+    std::string output_path = "./";
 
-    rapidcsv::Document doc;
+    rapidcsv::Document parameterDoc;
+    rapidcsv::Document initValsDoc;
+    rapidcsv::Document pluginDoc;
 
     const gsl_odeiv2_step_type* stepper = gsl_odeiv2_step_msbdf;
     double measure_interval = 0.1;
     double time = 10.0;
-    int benchmark = 0;
     double a_err = 1e-10;
     double r_err = 1e-6;
-
-
+    double step_size = 0.01;
+    
 
 
     while (options != -1)
     {
-        options = getopt_long(argc, argv, "hi:", voptions, &opt_idx);
+        options = getopt_long(argc, argv, "hi:p:o:n:", voptions, &opt_idx);
     
         switch (options)
         {
@@ -95,14 +105,21 @@ int main(int argc, char *argv[])
             // Read library
             plugin_path = (std::string)optarg;
             continue;
+        case 'o':
+            // Output path
+            output_path = (std::string)optarg;
+            continue;
         case 'p':
             // Read parameter csv
-            doc.Load(((std::string)optarg), rapidcsv::LabelParams(-1, -1));
+            parameterDoc.Load(((std::string)optarg), rapidcsv::LabelParams(-1, -1));
+            continue;
+        case 'n':
+            // Read initial values
+            initValsDoc.Load(((std::string)optarg), rapidcsv::LabelParams(-1, -1));
             continue;
         case -1:
             break;
         }
-    
     }
 
     // Check the path is valid
@@ -111,24 +128,123 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    bool pluginPathSupplied = false; 
 
-    // Attempt to load the plugin
-    ODESystem system = ODESystemLoader::load(plugin_path);
-
-    gsl_odeiv2_system gslSys = {system.function, system.jacobian, system.n_vars(), system.par_data()};
-
-    gsl_odeiv2_driver* d = gsl_odeiv2_driver_alloc_y_new(&gslSys, stepper,
-                            1e-10, a_err, r_err);
-
-    
-    // Setup GSL to solve the system
-    for (int i = 0; i < doc.GetRowCount(); ++i)
+    // Check if the path is to a document
+    std::string::size_type idx = plugin_path.rfind(".csv");
+    if (idx != std::string::npos)
     {
-        const std::vector<double> parameters = doc.GetRow<double>(i);
-
-
+        pluginDoc.Load(plugin_path, rapidcsv::LabelParams(-1, -1));
+        pluginPathSupplied = true;
     }
 
+    // Check parameters exist
+    if (!parameterDoc.GetRowCount())
+    {
+        std::cout << "Parameter data cannot be empty." << std::endl;
+        return 1;
+    }
+
+    // Check initial values exist
+    if (!initValsDoc.GetRowCount())
+    {
+        std::cout << "Initial values data cannot be empty." << std::endl;
+        return 1;
+    }
+
+    // Check that pluginDoc is valid if supplied
+    if (pluginPathSupplied && !pluginDoc.GetRowCount())
+    {
+        std::cout << "Plugin data invalid." << std::endl;
+        return 1;
+    }
+
+    // Setup output
+    std::vector<std::unique_ptr<std::string>> result(parameterDoc.GetRowCount());
+
+    std::vector<std::unique_ptr<ODESystem>> systems;
+    
+    // Fill systems
+    for (int i = 0; i < pluginDoc.GetRowCount(); ++i)
+    {
+        std::vector<std::string> systemPath = pluginDoc.GetRow<std::string>(i);
+        // Attempt to load the plugin
+        systems.emplace_back(ODESystemLoader::load(systemPath[0]));
+    }
+
+    // Handle single case
+    if (!pluginPathSupplied)
+    {
+        systems.emplace_back(ODESystemLoader::load(plugin_path));
+    }
+
+    // Check systems vector is properly filled
+    if (systems.size() != 1 && systems.size() != parameterDoc.GetRowCount())
+    {
+        std::cout << "Invalid number of systems for parameter inputs." << std::endl;
+        return 1;
+    }
+    
+    // Parameter id for the row
+    uint par_id = 0;
+    
+
+    // Setup GSL to solve the system
+    for (int i = 0; i < parameterDoc.GetRowCount(); ++i)
+    {
+        // Get parameters from this row
+        const std::vector<double> parameters = parameterDoc.GetRow<double>(i);
+        
+        // Get initial values
+        const std::vector<double> initVals = initValsDoc.GetRow<double>(i);
+        
+        // Setup the ODE system for this iteration
+        ODESystem* system = systems[0].get();
+        if (pluginPathSupplied)
+        {
+            system = systems[i].get();
+        }
+
+        system->setParData(parameters);
+        system->setInitVarData(initVals);
+
+        // GSL ODE system
+        gsl_odeiv2_system gslSys;        
+        
+        gslSys.function = system->func;
+        gslSys.jacobian = system->jac;
+        gslSys.params = system->par_data();
+        gslSys.dimension = system->n_vars();
+
+        gsl_odeiv2_driver* d = gsl_odeiv2_driver_alloc_y_new(&gslSys, stepper, 
+            1e-10, a_err, r_err);
+        
+        // Solve
+        int solve_error = system->solve(d, time, par_id++, measure_interval);
+
+        // Check for failure
+        if (solve_error)
+        {
+            return 1;
+        }
+
+        // Reset the driver/state
+        gsl_odeiv2_driver_reset(d);
+        
+        // Write result to output
+        result[i] = std::unique_ptr<std::string>(new std::string(system->solution()));
+    }
+
+    // Write to file
+    std::ofstream file;
+    file.open(output_path);
+
+    for (int i = 0; i < result.size(); ++i)
+    {
+        file << (*result[i]);
+    }
+
+    file.close();
 
     return 0;
 }

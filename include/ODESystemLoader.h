@@ -1,12 +1,13 @@
 #include "ODESystem.h"
 #include "ode_api.h"
 #include <type_traits>
+#include <memory>
 
 class ODESystemLoader
 {
     
     public:
-    static ODESystem load(const std::string& path)
+    static std::unique_ptr<ODESystem> load(const std::string& path)
     {
 
         auto lib = std::make_shared<SharedLibrary>(path);
@@ -15,7 +16,7 @@ class ODESystemLoader
 
         const ODEInfo* info = get_fn();
         
-        ODESystem sys(info->ode_func, info->ode_jac, info->n_vars, info->n_pars);
+        std::unique_ptr<ODESystem> sys(new ODESystem(info->ode_func, info->ode_jac, info->n_vars, info->n_pars, lib));
         return sys;
     }
 };
