@@ -6,7 +6,7 @@ to be determined in a separate library and loaded at runtime.
 
 ## Manual
 ODE Plugin test (V0.0.1): A program for testing loading dynamic libraries for GSL ODE solving.
-
+```
 Usage: ./ODEPluginTest [OPTION]...
 Example: ./ODEPluginTest -h
 
@@ -28,6 +28,7 @@ Example: ./ODEPluginTest -h
                Input .csv should have a column per variable
                Number of rows must match the number of parameter combinations.
                Number of columns must match the number of variables for the system.
+```
 
 ## TODO
 
