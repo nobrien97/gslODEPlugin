@@ -1,7 +1,7 @@
 #include "ode_api.h"
 #include "math.h"
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_errno.h>
+#include "gsl_matrix.h"
+#include "gsl_errno.h"
 
 static int lor_ode(double t, const double* y, double* dydt, void* params)
 {

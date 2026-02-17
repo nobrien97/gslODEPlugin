@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project(ODEPluginTest
         VERSION 0.0.1 
-        LANGUAGES CXX
+        LANGUAGES C CXX
 )
 
 configure_file(
@@ -13,43 +13,52 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-O3 -pthread -fopenmp")
 
-
-
 file(GLOB_RECURSE SOURCES src/*.cpp)
 list(FILTER SOURCES EXCLUDE REGEX "src/nar.cpp")
+list(FILTER SOURCES EXCLUDE REGEX "src/lorenz.cpp")
 
 # # Add GSL - this CMakeLists.txt is modified from Ben Haller's SLiM software (https://github.com/MesserLab/SLiM), released under GPL 2.0
-# set(TARGET_NAME_GSL gsl)
-# file(GLOB_RECURSE GSL_SOURCES ${PROJECT_SOURCE_DIR}/gsl/*.c ${PROJECT_SOURCE_DIR}/gsl/*/*.c)
-# set(GSL_INCLUDES ${PROJECT_SOURCE_DIR}/gsl ${PROJECT_SOURCE_DIR}/gsl/specfunc ${PROJECT_SOURCE_DIR}/gsl/blas ${PROJECT_SOURCE_DIR}/gsl/rng ${PROJECT_SOURCE_DIR}/gsl/cdf ${PROJECT_SOURCE_DIR}/gsl/vector ${PROJECT_SOURCE_DIR}/gsl/err ${PROJECT_SOURCE_DIR}/gsl/sys ${PROJECT_SOURCE_DIR}/gsl/randist ${PROJECT_SOURCE_DIR}/gsl/matrix ${PROJECT_SOURCE_DIR}/gsl/cblas ${PROJECT_SOURCE_DIR}/gsl/complex ${PROJECT_SOURCE_DIR}/gsl/block ${PROJECT_SOURCE_DIR}/gsl/interpolation ${PROJECT_SOURCE_DIR}/gsl/linalg ${PROJECT_SOURCE_DIR}/gsl/permutation ${PROJECT_SOURCE_DIR}/gsl/ode-initval2 /usr/local/include)
-# add_library(${TARGET_NAME_GSL} STATIC ${GSL_SOURCES})
-# target_include_directories(${TARGET_NAME_GSL} PUBLIC ${GSL_INCLUDES})
+set(TARGET_NAME_GSL gsl)
+file(GLOB_RECURSE GSL_SOURCES ${PROJECT_SOURCE_DIR}/gsl/*.c ${PROJECT_SOURCE_DIR}/gsl/*/*.c)
+message("Path = ${PROJECT_SOURCE_DIR}/gsl")
+set(GSL_INCLUDES ${PROJECT_SOURCE_DIR}/gsl ${PROJECT_SOURCE_DIR}/gsl/specfunc ${PROJECT_SOURCE_DIR}/gsl/blas ${PROJECT_SOURCE_DIR}/gsl/rng ${PROJECT_SOURCE_DIR}/gsl/cdf ${PROJECT_SOURCE_DIR}/gsl/vector ${PROJECT_SOURCE_DIR}/gsl/err ${PROJECT_SOURCE_DIR}/gsl/sys ${PROJECT_SOURCE_DIR}/gsl/randist ${PROJECT_SOURCE_DIR}/gsl/matrix ${PROJECT_SOURCE_DIR}/gsl/cblas ${PROJECT_SOURCE_DIR}/gsl/complex ${PROJECT_SOURCE_DIR}/gsl/block ${PROJECT_SOURCE_DIR}/gsl/interpolation ${PROJECT_SOURCE_DIR}/gsl/linalg ${PROJECT_SOURCE_DIR}/gsl/permutation ${PROJECT_SOURCE_DIR}/gsl/ode-initval2 /usr/local/include)
+add_library(${TARGET_NAME_GSL} STATIC ${GSL_SOURCES})
+target_include_directories(${TARGET_NAME_GSL} PUBLIC ${GSL_INCLUDES})
+set_target_properties(gsl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-find_package(GSL REQUIRED)
+# Main executable
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE
+${GSL_INCLUDES}
+${PROJECT_BINARY_DIR}
+"${PROJECT_SOURCE_DIR}/include"
+)
+if(CMAKE_DL_LIBS)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS} gsl)
+else()
+target_link_libraries(${PROJECT_NAME} PUBLIC gsl)
+endif()
+
+# Test libraries
 add_library(NAR MODULE "${PROJECT_SOURCE_DIR}/src/nar.cpp")
 add_library(Lorenz MODULE "${PROJECT_SOURCE_DIR}/src/lorenz.cpp")
-add_executable(${PROJECT_NAME} ${SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC
+
+
+target_include_directories(NAR PUBLIC 
+#${GSL_INCLUDES}
 "${PROJECT_BINARY_DIR}"
 "${PROJECT_SOURCE_DIR}/include"
 )
 
-target_include_directories(NAR PUBLIC
-"${PROJECT_BINARY_DIR}"
-"${PROJECT_SOURCE_DIR}/include"
-)
+target_link_libraries(NAR PRIVATE gsl)
 
 target_include_directories(Lorenz PUBLIC
+#${GSL_INCLUDES}
 "${PROJECT_BINARY_DIR}"
 "${PROJECT_SOURCE_DIR}/include"
 )
 
-
-if(CMAKE_DL_LIBS)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS} GSL::gsl)
-else()
-target_link_libraries(${PROJECT_NAME} PRIVATE GSL::gsl)
-endif()
+target_link_libraries(Lorenz PRIVATE gsl)
 
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

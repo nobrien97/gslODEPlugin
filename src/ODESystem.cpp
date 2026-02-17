@@ -1,8 +1,8 @@
 #include "ODESystem.h"
 #include <sstream>
 #include <iostream>
-#include "gsl/gsl_errno.h"
-#include "gsl/gsl_odeiv2.h"
+#include "gsl_errno.h"
+#include "gsl_odeiv2.h"
 
 int ODESystem::solve(gsl_odeiv2_driver* d, int max_time, int par_id, double measure_interval)
 {
