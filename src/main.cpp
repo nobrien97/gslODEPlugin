@@ -3,25 +3,23 @@
 #include "getopt.h"
 #include "version.h"
 #include "rapidcsv.h"
-#include "gsl_odeiv2.h"
 #include <iostream>
 #include <memory>
-
 
 
 #define no_arg 0
 #define arg_required 1
 #define arg_optional 2
 
-    const struct option longopts[] =
-    {
-        { "input",          required_argument,    0,  'i' },
-        { "output",         required_argument,    0,  'o' },
-        { "parameters",     required_argument,    0,  'p' },
-        { "help",           no_argument,          0,  'h' },
-        { "initial",        required_argument,    0,  'n' },
-        {0,0,0,0}
-    };
+const struct option longopts[] =
+{
+    { "input",          required_argument,    0,  'i' },
+    { "output",         required_argument,    0,  'o' },
+    { "parameters",     required_argument,    0,  'p' },
+    { "help",           no_argument,          0,  'h' },
+    { "initial",        required_argument,    0,  'n' },
+    {0,0,0,0}
+};
 
 
 void doHelp(char* appname) {
@@ -64,10 +62,10 @@ int main(int argc, char *argv[])
 {
     const struct option voptions[] = 
     {
-        { "help",        no_argument,        0,  'h' },
         { "input",       required_argument,  0,  'i' },
         { "output",      required_argument,  0,  'o' },
         { "parameters",  required_argument,  0,  'p' },
+        { "help",        no_argument,        0,  'h' },
         { "initial",     required_argument,  0,  'n' },
         {0,0,0,0}
     };
@@ -91,10 +89,8 @@ int main(int argc, char *argv[])
     
 
 
-    while (options != -1)
+    while ((options = getopt_long(argc, argv, "hi:p:o:n:", voptions, &opt_idx)) != -1)
     {
-        options = getopt_long(argc, argv, "hi:p:o:n:", voptions, &opt_idx);
-    
         switch (options)
         {
         case 'h':
