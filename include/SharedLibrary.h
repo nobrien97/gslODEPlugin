@@ -93,14 +93,14 @@ public:
             throw std::runtime_error("Unable to find symbol in library");
         }
         return reinterpret_cast<F>(symbol);
-#endif
+#else
         auto symbol = dlsym(_handle, name.c_str());
 
         if (!symbol)
         {
             throw std::runtime_error("Unable to find symbol in library");
         }
-
+#endif
         return reinterpret_cast<F>(symbol);
     }
 

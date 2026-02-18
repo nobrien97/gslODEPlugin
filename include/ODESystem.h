@@ -6,6 +6,10 @@
 #include "ode_api.h"
 #include "gsl_odeiv2.h"
 
+#if WIN32
+typedef unsigned int uint;
+#endif
+
 class ODESystem
 {
     public:
