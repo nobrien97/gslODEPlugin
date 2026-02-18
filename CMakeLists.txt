@@ -85,3 +85,13 @@ add_test(
   COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_multi_test.csv -n ${PROJECT_SOURCE_DIR}/vars_multi_test.csv -o ${PROJECT_SOURCE_DIR}/out_multi.csv -i ${PROJECT_SOURCE_DIR}/lib_multi_test.csv
 )
 
+add_test(
+  NAME testMultiGH
+  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_multi_test.csv -n ${PROJECT_SOURCE_DIR}/vars_multi_test.csv -o ${PROJECT_SOURCE_DIR}/out_multi.csv -i ${PROJECT_SOURCE_DIR}/libs.csv
+)
+
+
+# Setup for github actions
+set_tests_properties(testNAR testLorenz testMultiGH PROPERTIES LABELS "gh")
+
+
