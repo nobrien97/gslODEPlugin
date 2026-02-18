@@ -6,7 +6,7 @@
 #include "ode_api.h"
 #include "gsl_odeiv2.h"
 
-#if WIN32
+#if _WIN32
 typedef unsigned int uint;
 #endif
 
