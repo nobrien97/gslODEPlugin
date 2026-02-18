@@ -14,7 +14,7 @@ private:
     inline void* OpenHandle(const std::string& path) 
     {
 #if _WIN32
-	HMODULE library(LoadLibraryA(path->c_str()));
+	void* (void*)library(LoadLibraryA(path.c_str()));
 
 	if (!library) 
 	{
