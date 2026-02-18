@@ -71,8 +71,6 @@ message(STATUS "${PROJECT_SOURCE_DIR}")
 # Determine the shared library extension
 if(WIN32)
     set(SHARED_EXT "dll")
-elseif(APPLE)
-    set(SHARED_EXT "dylib")
 else()
     set(SHARED_EXT "so")
 endif()
