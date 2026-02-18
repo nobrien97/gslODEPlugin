@@ -46,7 +46,7 @@ private:
 
     if (closeError)
     {
-        throw std::runtime_error("Unable to unload library, error code " + closeError);
+        throw std::runtime_error("Unable to unload library, error code " + std::to_string(closeError));
     }
 
     std::cout << "Closed library at " << reinterpret_cast<size_t>(_handle) << std::endl;
