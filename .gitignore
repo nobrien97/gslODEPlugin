@@ -1,2 +1,3 @@
 build/*
 rapidcsv.h
+out*.csv
