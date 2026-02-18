@@ -14,7 +14,7 @@ private:
     inline void* OpenHandle(const std::string& path) 
     {
 #if _WIN32
-	lib_ptr<void> library(LoadLibraryA(path->c_str()));
+	HMODULE library(LoadLibraryA(path->c_str()));
 
 	if (!library) 
 	{
@@ -38,7 +38,7 @@ private:
     inline void CloseHandle()
     {
 #if _WIN32
-    FreeLibrary((HINSTANCE)_handle);
+    FreeLibrary((HMODULE)_handle);
 
 	return;
 #endif
