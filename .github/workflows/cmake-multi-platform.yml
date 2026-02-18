@@ -26,25 +26,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release]
         c_compiler: [gcc, clang]
-        include:
-          - os: windows-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-            generator: "MinGW Makefiles"
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-          - os: macos-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-        exclude:
-        - os: windows-latest
-          c_compiler: clang
-        - os: macos-latest
-          c_compiler: gcc
+        cpp_compiler: [g++, clang++]
     steps:
     - uses: actions/checkout@v4
 
@@ -55,11 +37,10 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Install MinGW
+    - name: Use mingw on windows
       if: matrix.os == 'windows-latest'
       run: |
-        choco install mingw --no-progress
-        echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $GITHUB_PATH
+        $env:PATH = "C:\msys64\ucrt64\bin;C:\msys64\usr\bin;$env:PATH"
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
