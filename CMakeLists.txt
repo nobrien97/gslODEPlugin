@@ -68,16 +68,27 @@ include(CTest)
 enable_testing()
 message(STATUS "${PROJECT_SOURCE_DIR}")
 
+# Determine the shared library extension
+if(WIN32)
+    set(SHARED_EXT "dll")
+elseif(APPLE)
+    set(SHARED_EXT "dylib")
+else()
+    set(SHARED_EXT "so")
+endif()
+
+
+
 # test NAR
 add_test(
   NAME testNAR
-  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_nar_test.csv -n ${PROJECT_SOURCE_DIR}/vars_nar_test.csv -o ${PROJECT_SOURCE_DIR}/out_nar.csv -i ${PROJECT_BINARY_DIR}/libNAR.so
+  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_nar_test.csv -n ${PROJECT_SOURCE_DIR}/vars_nar_test.csv -o ${PROJECT_SOURCE_DIR}/out_nar.csv -i ${PROJECT_BINARY_DIR}/libNAR.${SHARED_EXT}
 )
 
 # test Lorenz
 add_test(
   NAME testLorenz
-  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.so
+  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.${SHARED_EXT}
 )
 
 # Test multi-library version

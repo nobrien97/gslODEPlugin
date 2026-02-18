@@ -25,24 +25,18 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release]
-        c_compiler: [gcc, clang, cl]
+        c_compiler: [gcc, clang]
         include:
           - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
+            c_compiler: gcc
+            cpp_compiler: g++
+            generator: "MinGW Makefiles"
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
-          - os: ubuntu-latest
-            c_compiler: cl
 
     steps:
     - uses: actions/checkout@v4
@@ -54,15 +48,22 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
+    - name: Install MinGW
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install mingw --no-progress
+        echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $GITHUB_PATH
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -S ${{ github.workspace }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S ${{ github.workspace }}
+        ${{ matrix.generator && format('-G "{0}"', matrix.generator) || '' }}
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -71,9 +72,16 @@ jobs:
     - name: Create test files
       # Create file paths for multitest file
       run: |
-        echo "$GITHUB_WORKSPACE/build/libNAR.so" > libs.csv
-        echo "$GITHUB_WORKSPACE/build/libLorenz.so" >> libs.csv
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          EXT=dll
+        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          EXT=dylib
+        else
+          EXT=so
+        fi
 
+        echo "$GITHUB_WORKSPACE/build/libNAR.$EXT" > libs.csv
+        echo "$GITHUB_WORKSPACE/build/libLorenz.$EXT" >> libs.csv
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
