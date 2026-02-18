@@ -39,8 +39,8 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Add MinGW to PATH
-      if: matrix.os == 'windows-latest'
       shell: bash
+      if: matrix.os == 'windows-latest'
       run: echo "PATH=$PATH:C:\msys64\mingw64\bin" >> $GITHUB_ENV
 
     - name: Configure CMake
@@ -48,8 +48,8 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       shell: bash
       run: |
-        cmake -B ${{ steps.strings.outputs.build-output-dir }} \
-          -S ${{ github.workspace }} \
+        cmake -B "${{ steps.strings.outputs.build-output-dir }}" \
+          -S "${{ github.workspace }}" \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
