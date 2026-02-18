@@ -14,7 +14,7 @@ private:
     inline void* OpenHandle(const std::string& path) 
     {
 #if _WIN32
-	void* (void*)library(LoadLibraryA(path.c_str()));
+	void* library(LoadLibraryA(path.c_str()));
 
 	if (!library) 
 	{
