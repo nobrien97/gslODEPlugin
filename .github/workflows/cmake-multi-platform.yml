@@ -52,7 +52,7 @@ jobs:
       run: |
         GEN=""
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          GEN='-G "MinGW Makefiles"'
+          GEN=(-G "MinGW Makefiles")
         fi
 
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
@@ -60,7 +60,7 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          $GEN
+          "${GEN[@]}"
 
     - name: Build (with ${{matrix.compiler}}, for ${{matrix.os}})
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
