@@ -229,7 +229,8 @@ int main(int argc, char *argv[])
         }
 
         // Reset the driver/state
-        gsl_odeiv2_driver_reset(d);
+        //gsl_odeiv2_driver_reset(d);
+        gsl_odeiv2_driver_free(d);
         
         // Write result to output
         result[i] = std::unique_ptr<std::string>(new std::string(system->solution()));
