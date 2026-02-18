@@ -22,11 +22,11 @@
  * matrices.  Note that GSL native storage is row-major.  */
 
 #include "config.h"
-//#include <gsl/gsl_math.h>
-//#include <gsl/gsl_errno.h>
-//#include <gsl/gsl_cblas.h>
-//#include <gsl/gsl_cblas.h>
-//#include <gsl/gsl_blas_types.h>
+//#include "gsl_math.h"
+//#include "gsl_errno.h"
+//#include "gsl_cblas.h"
+//#include "gsl_cblas.h"
+//#include "gsl_blas_types.h"
 #include "gsl_blas.h"
 
 /* ========================================================================
