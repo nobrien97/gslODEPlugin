@@ -22,7 +22,7 @@ private:
 	}
 
 	return library;
-#endif
+#else
     void* library = dlopen(path.c_str(), RTLD_NOW);
 
 	if (library == NULL)
@@ -32,16 +32,14 @@ private:
     std::cout << "Loaded library at " << path << std::endl;
 
 	return library;
-
+#endif
     }
-
     inline void CloseHandle()
     {
 #if _WIN32
     FreeLibrary((HMODULE)_handle);
 
-	return;
-#endif
+#else
     int closeError = dlclose(_handle);
 
     if (closeError)
@@ -52,6 +50,7 @@ private:
     std::cout << "Closed library at " << reinterpret_cast<size_t>(_handle) << std::endl;
 
     return; 
+#endif
     }
 
 public:
