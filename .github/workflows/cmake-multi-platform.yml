@@ -25,8 +25,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release]
-        c_compiler: [gcc, clang]
-        cpp_compiler: [g++, clang++]
+        compiler: [gcc, clang]
     steps:
     - uses: actions/checkout@v4
 
@@ -37,23 +36,30 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Use mingw on windows
+    - name: Add MinGW to PATH
       if: matrix.os == 'windows-latest'
+      shell: bash
       run: |
-        $env:PATH = "C:\msys64\ucrt64\bin;C:\msys64\usr\bin;$env:PATH"
+        echo "C:/msys64/mingw64/bin" >> $GITHUB_PATH
+        gcc --version
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -S ${{ github.workspace }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        ${{ matrix.generator && format('-G "{0}"', matrix.generator) || '' }}
+      run: |
+        GEN=""
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          GEN='-G "MinGW Makefiles"'
+        fi
 
-    - name: Build
+        cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+          -S ${{ github.workspace }} \
+          -DCMAKE_C_COMPILER=${{ steps.compiler.outputs.cc }} \
+          -DCMAKE_CXX_COMPILER=${{ steps.compiler.outputs.cxx }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          $GEN
+
+    - name: Build (with ${{matrix.compiler}}, for ${{matrix.os}})
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
     - name: Test
