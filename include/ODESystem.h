@@ -4,7 +4,7 @@
 #include <iostream>
 #include "SharedLibrary.h"
 #include "ode_api.h"
-#include "gsl/gsl_odeiv2.h"
+#include "gsl_odeiv2.h"
 
 class ODESystem
 {

@@ -3,7 +3,7 @@
 #include "getopt.h"
 #include "version.h"
 #include "rapidcsv.h"
-#include "gsl/gsl_odeiv2.h"
+#include "gsl_odeiv2.h"
 #include <iostream>
 #include <memory>
 
