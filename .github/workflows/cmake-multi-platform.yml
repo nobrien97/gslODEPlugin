@@ -56,8 +56,8 @@ jobs:
 
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
           -S ${{ github.workspace }} \
-          -DCMAKE_C_COMPILER=${{ steps.compiler.outputs.cc }} \
-          -DCMAKE_CXX_COMPILER=${{ steps.compiler.outputs.cxx }} \
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           $GEN
 
