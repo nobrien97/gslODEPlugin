@@ -1,6 +1,6 @@
 #include "ode_api.h"
 #include "ODESystemLoader.h"
-#include "getopt.h"
+#include <getopt.h>
 #include "version.h"
 #include "rapidcsv.h"
 #include <iostream>

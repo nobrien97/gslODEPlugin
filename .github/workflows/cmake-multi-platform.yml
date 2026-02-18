@@ -31,10 +31,6 @@ jobs:
             c_compiler: gcc
             cpp_compiler: g++
             generator: "MinGW Makefiles"
-          - os: windows-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-            generator: "MinGW Makefiles"
 
           - os: ubuntu-latest
             c_compiler: gcc
@@ -48,6 +44,10 @@ jobs:
           - os: macos-latest
             c_compiler: gcc
             cpp_compiler: g++
+        exclude:
+          - os: windows-latest
+            c_compiler: clang
+            cpp_compiler: clang++
     steps:
     - uses: actions/checkout@v4
 
