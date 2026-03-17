@@ -98,7 +98,7 @@ public:
 
         if (!symbol)
         {
-            throw std::runtime_error("Unable to find symbol in library");
+            throw std::runtime_error("Unable to find symbol '" + name + "' in library");
         }
 #endif
         return reinterpret_cast<F>(symbol);

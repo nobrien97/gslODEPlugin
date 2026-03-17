@@ -3,20 +3,31 @@
 #include <type_traits>
 #include <memory>
 
+/*
+    ODESystemLoader
+    Purpose: provides a static method to load an ODESystem from a filepath (.dll/.so)
+*/
 class ODESystemLoader
 {
-    
     public:
     static std::unique_ptr<ODESystem> load(const std::string& path)
     {
-
-        auto lib = std::make_shared<SharedLibrary>(path);
         using GetODEInfo = const struct ODEInfo* (*)(); 
-        auto get_fn = lib->GetSymbol<GetODEInfo>("get_ode_system");
+        
+        std::shared_ptr<SharedLibrary> lib = std::make_shared<SharedLibrary>(path);
+        GetODEInfo get_fn = lib->GetSymbol<GetODEInfo>("get_ode_system");
 
         const ODEInfo* info = get_fn();
+
+        // Check if the API Version of the library matches the version used by the solver
+        if (info->api_version != ODE_API_VERSION)
+        {
+            std::cout << "Warning: ODE was built with API version " << 
+                info->api_version << " but solver is version " << ODE_API_VERSION << std::endl;
+        }
         
         std::unique_ptr<ODESystem> sys(new ODESystem(info->ode_func, info->ode_jac, info->n_vars, info->n_pars, lib));
+
         return sys;
     }
 };

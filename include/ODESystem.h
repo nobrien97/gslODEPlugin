@@ -10,38 +10,51 @@
 typedef unsigned int uint;
 #endif
 
+/*
+    ODESystem
+    Purpose: defines the structure of an ODE System
+*/
 class ODESystem
 {
     public:
-        // using ODESystemFunc = std::function<int(double, const double*, double*, void*)>;
-        // using ODESystemJac = std::function<int(double, const double*, double*, double*, void*)>;
-
+        /// @brief The number of variables
+        /// @return a uint number of variables
         inline uint n_vars() const { return _n_vars; }
+        /// @brief The number of parameters
+        /// @return a uint number of parameters
         inline uint n_pars() const { return _n_pars; }
-    
+
+        /// @brief The ODE Function
         ode_func_t func;
+        /// @brief The ODE Jacobian
         ode_jac_t jac;
 
-        inline double* par_data()
-        {
-            return _pars.data();
-        }
-
+        /// @brief Pointer to the (first element of the) variable values
         inline double* var_data()
         {
             return _vars.data();
         }
 
+        /// @brief Pointer to the (first element of the) parameter values
+        inline double* par_data()
+        {
+            return _pars.data();
+        }
+
+        /// @brief The solution in csv format: time, followed by each variable value
         inline std::string solution()
         {
             return _solution;
         }
 
+        /// @brief Whether a Jacobian has been supplied
         inline bool hasJacobian()
         {
             return jac;
         }
 
+
+        /// @brief Sets the parameter values
         inline void setParData(const std::vector<double>& newData)
         {
             if (newData.size() != n_pars())
@@ -58,6 +71,7 @@ class ODESystem
             return;
         }
 
+        /// @brief Sets the initial variable values
         inline void setInitVarData(const std::vector<double>& newData)
         {
             if (newData.size() != n_vars())
@@ -75,6 +89,7 @@ class ODESystem
 
         }
 
+        /// @brief Solves the system of equations
         int solve(gsl_odeiv2_driver* d, int max_time, int par_id, double measure_interval);
 
         ODESystem(ode_func_t fn, ode_jac_t jc, int n_vars, int n_pars, std::shared_ptr<SharedLibrary> lib) : 
@@ -87,8 +102,6 @@ class ODESystem
         ~ODESystem() = default;
 
     private:
-        friend class ODESystemLoader;
-
         uint _n_vars;
         uint _n_pars;
 
