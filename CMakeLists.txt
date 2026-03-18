@@ -27,6 +27,15 @@ add_library(${TARGET_NAME_GSL} STATIC ${GSL_SOURCES})
 target_include_directories(${TARGET_NAME_GSL} PUBLIC ${GSL_INCLUDES})
 set_target_properties(gsl PROPERTIES POSITION_INDEPENDENT_CODE ON) # Required for dynamic linking to work properly
 
+# Windows clang needs to include optarg since it is not supported by default
+# Using wingetopt: https://github.com/alex85k/wingetopt
+if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND WIN32)
+  message("WIN32 = ${WIN32} and CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
+  file(WINGETOPT_SRC "${PROJECT_SOURCE_DIR}/src/wingetopt/*")
+  list(APPEND SOURCES ${WINGETOPT_SRC})
+endif()
+
+
 # Main executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -39,19 +48,6 @@ if(CMAKE_DL_LIBS)
 else()
   target_link_libraries(${PROJECT_NAME} PUBLIC gsl)
 endif()
-
-# Windows clang needs to include optarg since it is not supported by default
-# Using wingetopt: https://github.com/alex85k/wingetopt
-if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND WIN32)
-  message("WIN32 = ${WIN32} and CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
-  set(WINGETOPT_SRC_DIR "${PROJECT_SOURCE_DIR}/src/wingetopt")
-  add_library(wingetopt ${WINGETOPT_SRC_DIR}/getopt.c)
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-  target_compile_definitions(wingetopt PRIVATE -DBUILDING_WINGETOPT_DLL -DWINGETOPT_SHARED_LIB)
-  # Link
-  target_link_libraries(${PROJECT_NAME} PUBLIC wingetopt)
-endif()
-
 
 # Test libraries
 add_library(NAR MODULE "${PROJECT_SOURCE_DIR}/src/nar.cpp")
