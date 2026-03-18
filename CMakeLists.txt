@@ -27,17 +27,18 @@ add_library(${TARGET_NAME_GSL} STATIC ${GSL_SOURCES})
 target_include_directories(${TARGET_NAME_GSL} PUBLIC ${GSL_INCLUDES})
 set_target_properties(gsl PROPERTIES POSITION_INDEPENDENT_CODE ON) # Required for dynamic linking to work properly
 
+# Main executable
+add_executable(${PROJECT_NAME} ${SOURCES} ${WINGETOPT_SRC})
+
 # Windows clang needs to include optarg since it is not supported by default
 # Using wingetopt: https://github.com/alex85k/wingetopt
 if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND WIN32)
   message("WIN32 = ${WIN32} and CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
-  target_include_directories(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src/wingetopt)
+  target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/wingetopt)
   set(WINGETOPT_SRC ${PROJECT_SOURCE_DIR}/src/wingetopt/getopt.c)
 endif()
 
-
-# Main executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${WINGETOPT_SRC})
+# Main executable includes
 target_include_directories(${PROJECT_NAME} PRIVATE
 ${GSL_INCLUDES}
 ${PROJECT_BINARY_DIR}
