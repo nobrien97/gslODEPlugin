@@ -25,7 +25,7 @@ message("Path = ${PROJECT_SOURCE_DIR}/gsl")
 set(GSL_INCLUDES ${PROJECT_SOURCE_DIR}/gsl ${PROJECT_SOURCE_DIR}/gsl/specfunc ${PROJECT_SOURCE_DIR}/gsl/blas ${PROJECT_SOURCE_DIR}/gsl/rng ${PROJECT_SOURCE_DIR}/gsl/cdf ${PROJECT_SOURCE_DIR}/gsl/vector ${PROJECT_SOURCE_DIR}/gsl/err ${PROJECT_SOURCE_DIR}/gsl/sys ${PROJECT_SOURCE_DIR}/gsl/randist ${PROJECT_SOURCE_DIR}/gsl/matrix ${PROJECT_SOURCE_DIR}/gsl/cblas ${PROJECT_SOURCE_DIR}/gsl/complex ${PROJECT_SOURCE_DIR}/gsl/block ${PROJECT_SOURCE_DIR}/gsl/interpolation ${PROJECT_SOURCE_DIR}/gsl/linalg ${PROJECT_SOURCE_DIR}/gsl/permutation ${PROJECT_SOURCE_DIR}/gsl/ode-initval2 /usr/local/include)
 add_library(${TARGET_NAME_GSL} STATIC ${GSL_SOURCES})
 target_include_directories(${TARGET_NAME_GSL} PUBLIC ${GSL_INCLUDES})
-set_target_properties(gsl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(gsl PROPERTIES POSITION_INDEPENDENT_CODE ON) # Required for dynamic linking to work properly
 
 # Main executable
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -35,10 +35,23 @@ ${PROJECT_BINARY_DIR}
 "${PROJECT_SOURCE_DIR}/include"
 )
 if(CMAKE_DL_LIBS)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS} gsl)
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS} gsl)
 else()
-target_link_libraries(${PROJECT_NAME} PUBLIC gsl)
+  target_link_libraries(${PROJECT_NAME} PUBLIC gsl)
 endif()
+
+# Windows clang needs to include optarg since it is not supported by default
+# Using wingetopt: https://github.com/alex85k/wingetopt
+if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND WIN32)
+  message("WIN32 = ${WIN32} and CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
+  set(WINGETOPT_SRC_DIR "${PROJECT_SOURCE_DIR}/src/wingetopt")
+  add_library(wingetopt ${WINGETOPT_SRC_DIR}/getopt.c)
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  target_compile_definitions(wingetopt PRIVATE -DBUILDING_WINGETOPT_DLL -DWINGETOPT_SHARED_LIB)
+  # Link
+  target_link_libraries(${PROJECT_NAME} PUBLIC wingetopt)
+endif()
+
 
 # Test libraries
 add_library(NAR MODULE "${PROJECT_SOURCE_DIR}/src/nar.cpp")
