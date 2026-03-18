@@ -31,13 +31,13 @@ set_target_properties(gsl PROPERTIES POSITION_INDEPENDENT_CODE ON) # Required fo
 # Using wingetopt: https://github.com/alex85k/wingetopt
 if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND WIN32)
   message("WIN32 = ${WIN32} and CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
-  file(GLOB_RECURSE WINGETOPT_SRC ${PROJECT_SOURCE_DIR}/src/wingetopt/*)
-  list(APPEND SOURCES ${WINGETOPT_SRC})
+  target_include_directories(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src/wingetopt)
+  set(WINGETOPT_SRC ${PROJECT_SOURCE_DIR}/src/wingetopt/getopt.c)
 endif()
 
 
 # Main executable
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${WINGETOPT_SRC})
 target_include_directories(${PROJECT_NAME} PRIVATE
 ${GSL_INCLUDES}
 ${PROJECT_BINARY_DIR}
