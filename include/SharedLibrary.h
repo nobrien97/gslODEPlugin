@@ -6,6 +6,7 @@
 #else
 #include <dlfcn.h>
 #endif
+#include "version.h"
 
 class SharedLibrary
 {
@@ -16,6 +17,10 @@ private:
     /// @returns a void* to the library
     inline void* OpenHandle(const std::string& path) 
     {
+#ifdef VERBOSE
+            std::cout << "Opening handle from path " << path << std::endl;
+#endif
+
 #if _WIN32
 	void* library(LoadLibraryA(path.c_str())); // HMODULE/HINSTANCE are void*
 
@@ -41,6 +46,11 @@ private:
     /// @brief Closes a handle to a SharedLibrary (called in destructor)
     inline void CloseHandle()
     {
+#ifdef VERBOSE
+            std::cout << "Closing handle " << _handle << std::endl;
+#endif
+
+
 #if _WIN32
     FreeLibrary((HMODULE)_handle); // TODO: cast to HMODULE might not be necessary
 

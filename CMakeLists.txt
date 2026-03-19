@@ -5,6 +5,8 @@ project(ODEPluginTest
 )
 
 option(VERBOSE "Output more state info" ON)
+
+include_guard()
 configure_file(
     "include/version.h.in"
     "version.h"

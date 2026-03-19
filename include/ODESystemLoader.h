@@ -2,6 +2,9 @@
 #include "ode_api.h"
 #include <type_traits>
 #include <memory>
+#include <iostream>
+#include "version.h"
+
 
 /*
     ODESystemLoader
@@ -13,6 +16,10 @@ class ODESystemLoader
     static std::unique_ptr<ODESystem> load(const std::string& path)
     {
         using GetODEInfo = const struct ODEInfo* (*)(); 
+
+#ifdef VERBOSE
+            std::cout << "Loading ODESystem from path " << path << std::endl;
+#endif
         
         std::shared_ptr<SharedLibrary> lib = std::make_shared<SharedLibrary>(path);
         GetODEInfo get_fn = lib->GetSymbol<GetODEInfo>("get_ode_system");
