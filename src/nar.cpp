@@ -3,7 +3,7 @@
 #include "gsl_matrix.h"
 #include "gsl_errno.h"
 
-static int nar_ode(double t, const double* y, double* dydt, void* params)
+static int ODE_CALL nar_ode(double t, const double* y, double* dydt, void* params)
 {
     // Params is length 7
     double* p = (double*)params;
@@ -28,7 +28,7 @@ static int nar_ode(double t, const double* y, double* dydt, void* params)
     return GSL_SUCCESS;
 }
 
-static int nar_jac(double t, const double* y, double* dfdy, double* dfdt, void* params)
+static int ODE_CALL nar_jac(double t, const double* y, double* dfdy, double* dfdt, void* params)
 {
     gsl_matrix_view dfdy_mat = gsl_matrix_view_array (dfdy, 1, 1);
     gsl_matrix *m = &dfdy_mat.matrix;
@@ -55,12 +55,10 @@ static int nar_jac(double t, const double* y, double* dfdy, double* dfdt, void* 
     dfdt[0] = 0.0;
 
     return GSL_SUCCESS;
-
 }
 
 
-extern "C"
-const ODEInfo* get_ode_system(void) 
+ODE_EXPORT const ODEInfo* ODE_CALL get_ode_system(void) 
 {
     static ODEInfo odesys = {ODE_API_VERSION, 1, 7, nar_ode, nar_jac};
     return &odesys;

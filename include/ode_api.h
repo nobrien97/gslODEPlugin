@@ -4,16 +4,26 @@
 extern "C" {
 #endif
 
+
+#ifdef _WIN32
+    #define ODE_EXPORT extern "C" __declspec( dllexport )
+    #define ODE_CALL __cdecl
+#else
+    #define ODE_EXPORT extern "C"
+    #define ODE_CALL
+ #endif
+
+
 #define ODE_API_VERSION 1
 
-typedef int (*ode_func_t)(
+typedef int (ODE_CALL *ode_func_t)(
     double t,
     const double* y, 
     double* f, 
     void* params
 );
 
-typedef int (*ode_jac_t)(
+typedef int (ODE_CALL *ode_jac_t)(
     double t,
     const double* y, 
     double* dfdy,
@@ -30,10 +40,7 @@ struct ODEInfo
     ode_jac_t ode_jac;
 };
 
-#ifdef _WIN32
-extern __declspec(dllexport)       // Export this function for calling later (Required for clang (but not for gcc???????))
-#endif
-const struct ODEInfo* get_ode_system(void);
+ODE_EXPORT const struct ODEInfo* ODE_CALL get_ode_system(void);
 
 #ifdef __cplusplus
 }

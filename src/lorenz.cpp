@@ -3,7 +3,7 @@
 #include "gsl_matrix.h"
 #include "gsl_errno.h"
 
-static int lor_ode(double t, const double* y, double* dydt, void* params)
+static int ODE_CALL lor_ode(double t, const double* y, double* dydt, void* params)
 {
     // Parameters
     (void)(t);
@@ -19,7 +19,7 @@ static int lor_ode(double t, const double* y, double* dydt, void* params)
     return GSL_SUCCESS;
 }
 
-static int lor_jac(double t, const double* y, double* dfdy, double* dfdt, void* params)
+static int ODE_CALL lor_jac(double t, const double* y, double* dfdy, double* dfdt, void* params)
 {
     (void)(t); /* avoid unused parameter warning */
     double* p = (double*)params;
@@ -48,8 +48,7 @@ static int lor_jac(double t, const double* y, double* dfdy, double* dfdt, void* 
 }
 
 
-extern "C"
-const ODEInfo* get_ode_system(void) 
+ODE_EXPORT const ODEInfo* ODE_CALL get_ode_system(void) 
 {
     static ODEInfo odesys = {ODE_API_VERSION, 3, 3, lor_ode, lor_jac};
     return &odesys;
