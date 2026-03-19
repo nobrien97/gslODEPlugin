@@ -4,6 +4,7 @@ project(ODEPluginTest
         LANGUAGES C CXX
 )
 
+option(VERBOSE "Output more state info" ON)
 configure_file(
     "include/version.h.in"
     "version.h"

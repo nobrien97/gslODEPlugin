@@ -87,8 +87,6 @@ int main(int argc, char *argv[])
     double r_err = 1e-6;
     double step_size = 0.01;
     
-
-
     while ((options = getopt_long(argc, argv, "hi:p:o:n:", voptions, &opt_idx)) != -1)
     {
         switch (options)
@@ -130,8 +128,13 @@ int main(int argc, char *argv[])
     std::string::size_type idx = plugin_path.rfind(".csv");
     if (idx != std::string::npos)
     {
+
         pluginDoc.Load(plugin_path, rapidcsv::LabelParams(-1, -1));
         pluginPathSupplied = true;
+
+#ifdef VERBOSE
+            std::cout << "Plugin Doc loaded from path " << plugin_path << std::endl;
+#endif
     }
 
     // Check parameters exist
@@ -159,6 +162,11 @@ int main(int argc, char *argv[])
     std::vector<std::unique_ptr<std::string>> result(parameterDoc.GetRowCount());
 
     std::vector<std::unique_ptr<ODESystem>> systems;
+
+#ifdef VERBOSE
+        std::cout << "Setting up ODESystems for " << parameterDoc.GetRowCount() << " systems." << std::endl;
+#endif
+
     
     // Fill systems
     for (int i = 0; i < pluginDoc.GetRowCount(); ++i)
@@ -195,6 +203,11 @@ int main(int argc, char *argv[])
         const std::vector<double> initVals = initValsDoc.GetRow<double>(i);
         
         // Setup the ODE system for this iteration
+
+#ifdef VERBOSE
+            std::cout << "Setting up system " << i << " of " << systems.size() << " for solve." << std::endl;
+#endif
+
         ODESystem* system = systems[0].get();
         if (pluginPathSupplied)
         {
@@ -203,6 +216,10 @@ int main(int argc, char *argv[])
 
         system->setParData(parameters);
         system->setInitVarData(initVals);
+
+#ifdef VERBOSE
+            std::cout << "Setting gsl_odeiv2_system values" << std::endl;
+#endif
 
         // GSL ODE system
         gsl_odeiv2_system gslSys;        
@@ -214,6 +231,11 @@ int main(int argc, char *argv[])
 
         gsl_odeiv2_driver* d = gsl_odeiv2_driver_alloc_y_new(&gslSys, stepper, 
             1e-10, a_err, r_err);
+
+#ifdef VERBOSE
+
+            std::cout << "Allocated new gsl driver, solving" << std::endl;
+#endif
         
         // Solve
         int solve_error = system->solve(d, time, par_id++, measure_interval);
@@ -226,7 +248,17 @@ int main(int argc, char *argv[])
 
         // Reset the driver/state
         //gsl_odeiv2_driver_reset(d);
+
+#ifdef VERBOSE
+            std::cout << "Freeing driver" << std::endl;
+#endif
+
+
         gsl_odeiv2_driver_free(d);
+
+#ifdef VERBOSE
+            std::cout << "Writing result" << std::endl;
+#endif
         
         // Write result to output
         result[i] = std::unique_ptr<std::string>(new std::string(system->solution()));
