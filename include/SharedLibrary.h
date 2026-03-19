@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 #include <stdexcept>
 #include <iostream>
 #ifdef _WIN32
@@ -110,21 +111,23 @@ public:
     inline F GetSymbol(const std::string& name) const 
     {
 #if _WIN32
-        auto symbol = GetProcAddress((HINSTANCE)_handle, name.c_str());
+        FARPROC symbol = GetProcAddress((HINSTANCE)_handle, name.c_str());
         if (!symbol)
         {
             throw std::runtime_error("Unable to find symbol in library");
         }
-        return reinterpret_cast<F>(symbol);
 #else
-        auto symbol = dlsym(_handle, name.c_str());
+        void* symbol = dlsym(_handle, name.c_str());
 
         if (!symbol)
         {
             throw std::runtime_error("Unable to find symbol '" + name + "' in library");
         }
 #endif
-        return reinterpret_cast<F>(symbol);
+        F fn; 
+        static_assert(sizeof(symbol) == sizeof(fn), "Symbol does not match expected signature");
+        std::memcpy(&fn, &symbol, sizeof(fn));
+        return fn;
     }
 
 };
