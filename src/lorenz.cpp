@@ -49,6 +49,9 @@ static int lor_jac(double t, const double* y, double* dfdy, double* dfdt, void* 
 
 
 extern "C"
+#ifdef _WIN32
+__declspec(dllexport)       // Export this function for calling later (Required for clang (but not for gcc???????))
+#endif
 const ODEInfo* get_ode_system(void) 
 {
     static ODEInfo odesys = {ODE_API_VERSION, 3, 3, lor_ode, lor_jac};
