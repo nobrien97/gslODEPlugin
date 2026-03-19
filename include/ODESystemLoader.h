@@ -1,6 +1,7 @@
 #include "ODESystem.h"
 #include "ode_api.h"
 #include <type_traits>
+#include <stdexcept>
 #include <memory>
 #include <iostream>
 #include "version.h"
@@ -22,6 +23,16 @@ class ODESystemLoader
 #endif
         
         std::shared_ptr<SharedLibrary> lib = std::make_shared<SharedLibrary>(path);
+
+        if (lib == nullptr)
+        {
+            throw std::runtime_error("Unable to load library");
+        }
+
+#ifdef VERBOSE
+            std::cout << "Getting ODE from library" << path << std::endl;
+#endif
+        
         GetODEInfo get_fn = lib->GetSymbol<GetODEInfo>("get_ode_system");
 
         const ODEInfo* info = get_fn();

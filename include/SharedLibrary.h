@@ -24,6 +24,10 @@ private:
 #if _WIN32
 	void* library(LoadLibraryA(path.c_str())); // HMODULE/HINSTANCE are void*
 
+#ifdef VERBOSE
+        std::cout << "Windows: loaded library" << std::endl;
+#endif
+
 	if (!library) 
 	{
 		return nullptr;
