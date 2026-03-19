@@ -40,7 +40,7 @@ struct ODEInfo
     ode_jac_t ode_jac;
 };
 
-ODE_EXPORT const struct ODEInfo* ODE_CALL get_ode_system(void);
+typedef const ODEInfo* (ODE_CALL *get_ode_system_fn)(void);
 
 #ifdef __cplusplus
 }

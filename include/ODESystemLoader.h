@@ -16,8 +16,6 @@ class ODESystemLoader
     public:
     static std::unique_ptr<ODESystem> load(const std::string& path)
     {
-        using GetODEInfo = const struct ODEInfo* (*)(); 
-
 #ifdef VERBOSE
             std::cout << "Loading ODESystem from path " << path << std::endl;
 #endif
@@ -33,7 +31,7 @@ class ODESystemLoader
             std::cout << "Getting ODE from library" << path << std::endl;
 #endif
         
-        GetODEInfo get_fn = lib->GetSymbol<GetODEInfo>("get_ode_system");
+        get_ode_system_fn get_fn = lib->GetSymbol<get_ode_system_fn>("get_ode_system");
 
         const ODEInfo* info = get_fn();
 
