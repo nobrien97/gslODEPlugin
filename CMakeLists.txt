@@ -57,6 +57,7 @@ endif()
 # Test libraries
 add_library(NAR MODULE "${PROJECT_SOURCE_DIR}/src/nar.cpp")
 add_library(Lorenz MODULE "${PROJECT_SOURCE_DIR}/src/lorenz.cpp")
+add_library(TestLib MODULE "${PROJECT_SOURCE_DIR}/src/test_lib.cpp")
 
 
 target_include_directories(NAR PUBLIC 
@@ -74,6 +75,14 @@ target_include_directories(Lorenz PUBLIC
 )
 
 target_link_libraries(Lorenz PRIVATE gsl)
+
+target_include_directories(TestLib PUBLIC
+#${GSL_INCLUDES}
+"${PROJECT_BINARY_DIR}"
+"${PROJECT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(TestLib PRIVATE gsl)
 
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
@@ -107,6 +116,13 @@ add_test(
   COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.${SHARED_EXT}
 )
 
+# test testLib
+add_test(
+  NAME testTestLib
+  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libTestLib.${SHARED_EXT}
+)
+
+
 # Test multi-library version
 add_test(
   NAME testMulti
@@ -114,6 +130,6 @@ add_test(
 )
 
 # Setup for github actions
-set_tests_properties(testNAR testLorenz testMulti PROPERTIES LABELS "gh")
+set_tests_properties(testNAR testLorenz testMulti testTestLib PROPERTIES LABELS "gh")
 
 
