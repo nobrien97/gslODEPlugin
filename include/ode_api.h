@@ -30,6 +30,9 @@ struct ODEInfo
     ode_jac_t ode_jac;
 };
 
+#ifdef _WIN32
+extern __declspec(dllexport)       // Export this function for calling later (Required for clang (but not for gcc???????))
+#endif
 const struct ODEInfo* get_ode_system(void);
 
 #ifdef __cplusplus
