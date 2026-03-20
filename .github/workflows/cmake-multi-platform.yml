@@ -29,7 +29,6 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
             generator: "MinGW Makefiles"
-
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -51,6 +50,12 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        clang --version
+        clang++ --version
+        clang-cl --version
+        where clang
+        where clang++
+        where clang-cl
 
     - name: Install MinGW
       if: matrix.os == 'windows-latest'
