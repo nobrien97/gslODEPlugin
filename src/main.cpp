@@ -5,6 +5,7 @@
 #include "rapidcsv.h"
 #include <iostream>
 #include <memory>
+#include <string>
 
 
 #define no_arg 0
@@ -115,6 +116,9 @@ int main(int argc, char *argv[])
             break;
         }
     }
+#ifdef VERBOSE
+    std::cout << "String size: " << sizeof(std::string) << std::endl;
+#endif
 
     // Check the path is valid
     if (plugin_path.empty()) {
