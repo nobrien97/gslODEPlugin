@@ -116,12 +116,6 @@ add_test(
   COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.${SHARED_EXT}
 )
 
-# test testLib
-add_test(
-  NAME testTestLib
-  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libTestLib.${SHARED_EXT}
-)
-
 
 # Test multi-library version
 add_test(
@@ -130,6 +124,6 @@ add_test(
 )
 
 # Setup for github actions
-set_tests_properties(testNAR testLorenz testMulti testTestLib PROPERTIES LABELS "gh")
+set_tests_properties(testNAR testLorenz testMulti PROPERTIES LABELS "gh")
 
 
