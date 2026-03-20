@@ -41,6 +41,11 @@ jobs:
           - os: macos-latest
             c_compiler: gcc
             cpp_compiler: g++
+        exclude:
+        - os: windows-latest
+          c_compiler: clang
+          cpp_compiler: clang++
+
     steps:
     - uses: actions/checkout@v4
 
@@ -50,12 +55,6 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-        clang --version
-        clang++ --version
-        clang-cl --version
-        where clang
-        where clang++
-        where clang-cl
 
     - name: Install MinGW
       if: matrix.os == 'windows-latest'
