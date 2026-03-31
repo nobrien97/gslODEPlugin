@@ -12,14 +12,16 @@ configure_file(
     "version.h"
 )
 
+option(BUILD_ONLY_MAIN "Only build the main program" OFF)
+option(BUILD_ONLY_LIBS "Only build the shared libraries" OFF)
+message("BUILD_ONLY_LIBS is ${BUILD_ONLY_LIBS}")
+message("BUILD_ONLY_MAIN is ${BUILD_ONLY_MAIN}")
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-O3")
 #set(CMAKE_CXX_FLAGS "-fsanitize=address,undefined -fno-omit-frame-pointer -g -O1")
 
-file(GLOB_RECURSE SOURCES src/*.cpp)
-list(FILTER SOURCES EXCLUDE REGEX "src/nar.cpp")
-list(FILTER SOURCES EXCLUDE REGEX "src/lorenz.cpp")
 
 # # Add GSL - this CMakeLists.txt is modified from Ben Haller's SLiM software (https://github.com/MesserLab/SLiM), released under GPL 2.0
 set(TARGET_NAME_GSL gsl)
@@ -31,99 +33,101 @@ target_include_directories(${TARGET_NAME_GSL} PUBLIC ${GSL_INCLUDES})
 set_target_properties(gsl PROPERTIES POSITION_INDEPENDENT_CODE ON) # Required for dynamic linking to work properly
 
 
-# Windows clang needs to include optarg since it is not supported by default
-# Using wingetopt: https://github.com/alex85k/wingetopt
-if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND WIN32)
-message("WIN32 = ${WIN32} and CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
-include_directories(${PROJECT_SOURCE_DIR}/src/wingetopt)
-set(WINGETOPT_SRC ${PROJECT_SOURCE_DIR}/src/wingetopt/getopt.c)
-endif()
+if(NOT BUILD_ONLY_LIBS)
+  # Main program sources
+  file(GLOB_RECURSE SOURCES src/*.cpp)
+  list(FILTER SOURCES EXCLUDE REGEX "src/nar.cpp")
+  list(FILTER SOURCES EXCLUDE REGEX "src/lorenz.cpp")
 
-# Main executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${WINGETOPT_SRC})
+  # Windows clang needs to include optarg since it is not supported by default
+  # Using wingetopt: https://github.com/alex85k/wingetopt
+  if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND WIN32)
+    message("WIN32 = ${WIN32} and CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
+    include_directories(${PROJECT_SOURCE_DIR}/src/wingetopt)
+    set(WINGETOPT_SRC ${PROJECT_SOURCE_DIR}/src/wingetopt/getopt.c)
+  endif()
 
-# Main executable includes
-target_include_directories(${PROJECT_NAME} PRIVATE
-${GSL_INCLUDES}
-${PROJECT_BINARY_DIR}
-"${PROJECT_SOURCE_DIR}/include"
-)
-if(CMAKE_DL_LIBS)
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS} gsl)
-else()
-  target_link_libraries(${PROJECT_NAME} PUBLIC gsl)
+  # Main executable
+  add_executable(${PROJECT_NAME} ${SOURCES} ${WINGETOPT_SRC})
+
+  # Main executable includes
+  target_include_directories(${PROJECT_NAME} PRIVATE
+  ${GSL_INCLUDES}
+  ${PROJECT_BINARY_DIR}
+  "${PROJECT_SOURCE_DIR}/include"
+  )
+  if(CMAKE_DL_LIBS)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS} gsl)
+  else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC gsl)
+  endif()
 endif()
 
 # Test libraries
-add_library(NAR MODULE "${PROJECT_SOURCE_DIR}/src/nar.cpp")
-add_library(Lorenz MODULE "${PROJECT_SOURCE_DIR}/src/lorenz.cpp")
-add_library(TestLib MODULE "${PROJECT_SOURCE_DIR}/src/test_lib.cpp")
 
+if (NOT BUILD_ONLY_MAIN)
+  add_library(NAR MODULE "${PROJECT_SOURCE_DIR}/src/nar.cpp")
+  add_library(Lorenz MODULE "${PROJECT_SOURCE_DIR}/src/lorenz.cpp")
 
-target_include_directories(NAR PUBLIC 
-#${GSL_INCLUDES}
-"${PROJECT_BINARY_DIR}"
-"${PROJECT_SOURCE_DIR}/include"
-)
+  target_include_directories(NAR PUBLIC 
+  #${GSL_INCLUDES}
+  "${PROJECT_BINARY_DIR}"
+  "${PROJECT_SOURCE_DIR}/include"
+  )
 
-target_link_libraries(NAR PRIVATE gsl)
+  target_link_libraries(NAR PRIVATE gsl)
 
-target_include_directories(Lorenz PUBLIC
-#${GSL_INCLUDES}
-"${PROJECT_BINARY_DIR}"
-"${PROJECT_SOURCE_DIR}/include"
-)
+  target_include_directories(Lorenz PUBLIC
+  #${GSL_INCLUDES}
+  "${PROJECT_BINARY_DIR}"
+  "${PROJECT_SOURCE_DIR}/include"
+  )
 
-target_link_libraries(Lorenz PRIVATE gsl)
+  target_link_libraries(Lorenz PRIVATE gsl)
 
-target_include_directories(TestLib PUBLIC
-#${GSL_INCLUDES}
-"${PROJECT_BINARY_DIR}"
-"${PROJECT_SOURCE_DIR}/include"
-)
-
-target_link_libraries(TestLib PRIVATE gsl)
-
-
-install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-
-include(CTest)
-enable_testing()
-message(STATUS "${PROJECT_SOURCE_DIR}")
-
-# Determine the shared library extension
-if(WIN32)
-    set(SHARED_EXT "dll")
-else()
-    set(SHARED_EXT "so")
 endif()
 
-# Write multi file write for testing
-file(WRITE "lib_multi_test.csv"
-"./libNAR.${SHARED_EXT}\n"
-"./libLorenz.${SHARED_EXT}\n"
-)
 
-# test NAR
-add_test(
-  NAME testNAR
-  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_nar_test.csv -n ${PROJECT_SOURCE_DIR}/vars_nar_test.csv -o ${PROJECT_SOURCE_DIR}/out_nar.csv -i ${PROJECT_BINARY_DIR}/libNAR.${SHARED_EXT}
-)
+if(NOT BUILD_ONLY_LIBS)
+  install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+  
+  include(CTest)
+  enable_testing()
+  message(STATUS "${PROJECT_SOURCE_DIR}")
 
-# test Lorenz
-add_test(
-  NAME testLorenz
-  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.${SHARED_EXT}
-)
+  # Determine the shared library extension
+  if(WIN32)
+      set(SHARED_EXT "dll")
+  else()
+      set(SHARED_EXT "so")
+  endif()
 
+  # Write multi file write for testing
+  file(WRITE "lib_multi_test.csv"
+  "./libNAR.${SHARED_EXT}\n"
+  "./libLorenz.${SHARED_EXT}\n"
+  )
 
-# Test multi-library version
-add_test(
-  NAME testMulti
-  COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_multi_test.csv -n ${PROJECT_SOURCE_DIR}/vars_multi_test.csv -o ${PROJECT_SOURCE_DIR}/out_multi.csv -i ${PROJECT_SOURCE_DIR}/lib_multi_test.csv
-)
+  # test NAR
+  add_test(
+    NAME testNAR
+    COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_nar_test.csv -n ${PROJECT_SOURCE_DIR}/vars_nar_test.csv -o ${PROJECT_SOURCE_DIR}/out_nar.csv -i ${PROJECT_BINARY_DIR}/libNAR.${SHARED_EXT}
+  )
 
-# Setup for github actions
-set_tests_properties(testNAR testLorenz testMulti PROPERTIES LABELS "gh")
+  # test Lorenz
+  add_test(
+    NAME testLorenz
+    COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.${SHARED_EXT}
+  )
 
+  # Test multi-library version
+  add_test(
+    NAME testMulti
+    COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_multi_test.csv -n ${PROJECT_SOURCE_DIR}/vars_multi_test.csv -o ${PROJECT_SOURCE_DIR}/out_multi.csv -i ${PROJECT_SOURCE_DIR}/lib_multi_test.csv
+    )
+
+  # Setup for github actions
+  set_tests_properties(testNAR testLorenz testMulti PROPERTIES LABELS "gh")
+
+endif()
 

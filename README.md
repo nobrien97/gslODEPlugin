@@ -30,6 +30,12 @@ Example: ./ODEPluginTest -h
                Number of columns must match the number of variables for the system.
 ```
 
+## Notes
+
+- The dynamic library and the solver need to be built with the same calling convention (e.g. __cdecl). Crossing between clang-cl and gnu will not work.
+- This might also cause problems between compilers - it is safest to have the library and main program compiled by the same compiler
+- Tests pass when loading shared libraries compiled with clang on a gcc-compiled main executable or vice versa (on Linux)
+
 ## TODO
 
 - Double check unloading behaviour is working
