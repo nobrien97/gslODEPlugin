@@ -17,7 +17,7 @@ option(BUILD_ONLY_LIBS "Only build the shared libraries" OFF)
 message("BUILD_ONLY_LIBS is ${BUILD_ONLY_LIBS}")
 message("BUILD_ONLY_MAIN is ${BUILD_ONLY_MAIN}")
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-O3")
 #set(CMAKE_CXX_FLAGS "-fsanitize=address,undefined -fno-omit-frame-pointer -g -O1")

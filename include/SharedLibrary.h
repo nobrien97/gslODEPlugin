@@ -2,6 +2,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
+#include <filesystem>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -26,6 +27,13 @@ private:
 	void* library(LoadLibraryA(path.c_str())); // HMODULE/HINSTANCE are void*
 
 #ifdef VERBOSE
+    if (!library)
+    {
+        DWORD err = GetLastError();
+        std::cerr << "LoadLibrary failed: " << err << std::endl;
+    }
+
+        std::cout << "File exists: " << std::filesystem::exists(path) << std::endl;
         std::cout << "Windows: loaded library" << std::endl;
 #endif
 
@@ -83,7 +91,7 @@ public:
         if (_handle == nullptr)
         {
             // Throw an error
-            throw std::runtime_error("Unable to find library at path " + path);
+            throw std::runtime_error("Unable to open library at path " + path);
         }
     };
 
