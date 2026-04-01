@@ -144,7 +144,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=ON
         -DBUILD_ONLY_MAIN=OFF
-        -G"MSYS Makefiles"
+        -G Ninja
 
     - name: Build plugins
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -160,7 +160,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=OFF
         -DBUILD_ONLY_MAIN=ON
-        -G"MSYS Makefiles"
+        -G Ninja
 
     - name: Build host
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
