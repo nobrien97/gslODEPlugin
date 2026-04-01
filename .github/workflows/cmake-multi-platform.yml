@@ -112,10 +112,8 @@ jobs:
         host_c_compiler: [gcc, clang]
         plugin_c_compiler: [gcc, clang]
         include:
-          - sys: mingw64
-            env: x86_64
-          - sys: ucrt64
-            env: ucrt-x86_64
+          - { sys: mingw64, env: x86_64 }
+          - { sys: ucrt64, env: ucrt-x86_64 }
 
     steps:
     - uses: actions/checkout@v4
@@ -128,13 +126,12 @@ jobs:
         echo "dir_build_plugins=${{ github.workspace }}/build_plugins" >> "$GITHUB_OUTPUT"
         echo "dir_build_host=${{ github.workspace }}/build_host" >> "$GITHUB_OUTPUT"
 
-    - name: Setup MSYS2
+    - name: Setup MSYS2 ${{matrix.sys}}
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
         install: >
           mingw-w64-${{matrix.env}}-gcc
-          mingw-w64-${{matrix.env}}-clang
           mingw-w64-${{matrix.env}}-cmake
 
     - name: Set compilers
@@ -143,22 +140,10 @@ jobs:
       run: >
         PREFIX=x86_64-w64-mingw32-
         
-        if [[ "${{matrix.host_c_compiler}}" == "gcc" ]]; then
-          echo "HOST_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
-          echo "HOST_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
-        else
-          echo "HOST_CC=clang" >> $GITHUB_OUTPUT
-          echo "HOST_CXX=clang++" >> $GITHUB_OUTPUT
-        fi
-
-        if [[ "${{matrix.plugin_c_compiler}}" == "gcc" ]]; then
-          echo "PLUGIN_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
-          echo "PLUGIN_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
-        else
-          echo "PLUGIN_CC=clang" >> $GITHUB_OUTPUT
-          echo "PLUGIN_CXX=clang++" >> $GITHUB_OUTPUT
-        fi
-        
+        echo "HOST_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
+        echo "HOST_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
+        echo "PLUGIN_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
+        echo "PLUGIN_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
 
     - name: Configure CMake plugins
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -171,7 +156,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DBUILD_ONLY_LIBS=ON
         -DBUILD_ONLY_MAIN=OFF
-        -G Ninja
+        -G"MSYS Makefiles"
 
     - name: Build plugins
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -189,7 +174,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DBUILD_ONLY_LIBS=OFF
         -DBUILD_ONLY_MAIN=ON
-        -G Ninja
+        -G"MSYS Makefiles"
 
     - name: Build host
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
