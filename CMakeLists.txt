@@ -17,6 +17,8 @@ option(BUILD_ONLY_LIBS "Only build the shared libraries" OFF)
 message("BUILD_ONLY_LIBS is ${BUILD_ONLY_LIBS}")
 message("BUILD_ONLY_MAIN is ${BUILD_ONLY_MAIN}")
 
+set(PLUGIN_DIR "${PROJECT_BINARY_DIR}" CACHE PATH "Path to plugin libraries")
+
   # Determine the shared library extension
   if(WIN32)
       set(SHARED_EXT "dll")
@@ -25,10 +27,10 @@ message("BUILD_ONLY_MAIN is ${BUILD_ONLY_MAIN}")
   endif()
 
 # Check if libraries exist
-if(EXISTS "${PROJECT_BINARY_DIR}/libNAR.${SHARED_EXT}")
-   message("Found libNAR.${SHARED_EXT} in ${PROJECT_BINARY_DIR}")
+if(EXISTS "${PLUGIN_DIR}/libNAR.${SHARED_EXT}")
+   message("Found libNAR.${SHARED_EXT} in ${PLUGIN_DIR}")
 else()
-  message("Could not find libNAR.${SHARED_EXT} in ${PROJECT_BINARY_DIR}")
+  message("Could not find libNAR.${SHARED_EXT} in ${PLUGIN_DIR}")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -111,20 +113,20 @@ if(NOT BUILD_ONLY_LIBS)
 
   # Write multi file write for testing
   file(WRITE "lib_multi_test.csv"
-  "./libNAR.${SHARED_EXT}\n"
-  "./libLorenz.${SHARED_EXT}\n"
+  "${PLUGIN_DIR}/libNAR.${SHARED_EXT}\n"
+  "${PLUGIN_DIR}/libLorenz.${SHARED_EXT}\n"
   )
 
   # test NAR
   add_test(
     NAME testNAR
-    COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_nar_test.csv -n ${PROJECT_SOURCE_DIR}/vars_nar_test.csv -o ${PROJECT_SOURCE_DIR}/out_nar.csv -i ${PROJECT_BINARY_DIR}/libNAR.${SHARED_EXT}
+    COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_nar_test.csv -n ${PROJECT_SOURCE_DIR}/vars_nar_test.csv -o ${PROJECT_SOURCE_DIR}/out_nar.csv -i ${PLUGIN_DIR}/libNAR.${SHARED_EXT}
   )
 
   # test Lorenz
   add_test(
     NAME testLorenz
-    COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PROJECT_BINARY_DIR}/libLorenz.${SHARED_EXT}
+    COMMAND ${PROJECT_NAME} -p ${PROJECT_SOURCE_DIR}/pars_lor_test.csv -n ${PROJECT_SOURCE_DIR}/vars_lor_test.csv -o ${PROJECT_SOURCE_DIR}/out_lorenz.csv -i ${PLUGIN_DIR}/libLorenz.${SHARED_EXT}
   )
 
   # Test multi-library version
