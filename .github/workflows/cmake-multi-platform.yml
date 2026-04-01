@@ -66,11 +66,12 @@ jobs:
       shell: bash
       run: >
         PREFIX=""
-        if [["${{matrix.os}}" == "windows-latest"]]; then
+
+        if [[ "${{matrix.os}}" == "windows-latest" ]]; then
           PREFIX=x86_64-w64-mingw32-
         fi
         
-        if [["${{matrix.host_c_compiler}}" == "gcc"]]; then
+        if [[ "${{matrix.host_c_compiler}}" == "gcc" ]]; then
           echo "HOST_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
           echo "HOST_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
         else
@@ -78,7 +79,7 @@ jobs:
           echo "HOST_CXX=${PREFIX}clang++" >> $GITHUB_OUTPUT
         fi
 
-        if [["${{matrix.plugin_c_compiler}}" == "gcc"]]; then
+        if [[ "${{matrix.plugin_c_compiler}}" == "gcc" ]]; then
           echo "PLUGIN_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
           echo "PLUGIN_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
         else
