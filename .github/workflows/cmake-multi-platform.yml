@@ -109,8 +109,8 @@ jobs:
 
       matrix:
         include:
-          - { sys: mingw64, env: x86_64, host_c_compiler: gcc, plugin_c_compiler: gcc }
-          - { sys: ucrt64, env: ucrt-x86_64, host_c_compiler: gcc, plugin_c_compiler: gcc }
+          - { sys: mingw64, env: x86_64 }
+          - { sys: ucrt64, env: ucrt-x86_64 }
 
     steps:
     - uses: actions/checkout@v4
@@ -131,25 +131,14 @@ jobs:
           mingw-w64-${{matrix.env}}-gcc
           mingw-w64-${{matrix.env}}-cmake
 
-    - name: Set compilers
-      id: compilers
-      shell: bash
-      run: >
-        PREFIX=x86_64-w64-mingw32-
-        
-        echo "HOST_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
-        echo "HOST_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
-        echo "PLUGIN_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
-        echo "PLUGIN_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
-
     - name: Configure CMake plugins
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
         cmake -B ${{ steps.strings.outputs.dir_build_host }}
         -S ${{ github.workspace }}
-        -DCMAKE_CXX_COMPILER=${{ steps.compilers.outputs.PLUGIN_CXX }}
-        -DCMAKE_C_COMPILER=${{ steps.compilers.outputs.PLUGIN_CC }}
+        -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++
+        -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=ON
         -DBUILD_ONLY_MAIN=OFF
@@ -166,8 +155,8 @@ jobs:
       run: >
         cmake --fresh -B ${{ steps.strings.outputs.dir_build_host }}
         -S ${{ github.workspace }}
-        -DCMAKE_CXX_COMPILER=${{ steps.compilers.outputs.HOST_CXX }}
-        -DCMAKE_C_COMPILER=${{ steps.compilers.outputs.HOST_CC }}
+        -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++
+        -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=OFF
         -DBUILD_ONLY_MAIN=ON
