@@ -128,6 +128,10 @@ jobs:
       with:
         msystem: ${{matrix.sys}}
         install: >
+          git
+          base-devel
+          msys2-devel
+          mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gcc
           mingw-w64-${{matrix.env}}-cmake
 
