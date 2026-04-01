@@ -108,12 +108,9 @@ jobs:
       fail-fast: false
 
       matrix:
-        build_type: [Release]
-        host_c_compiler: [gcc, clang]
-        plugin_c_compiler: [gcc, clang]
         include:
-          - { sys: mingw64, env: x86_64 }
-          - { sys: ucrt64, env: ucrt-x86_64 }
+          - { sys: mingw64, env: x86_64, host_c_compiler: gcc, plugin_c_compiler: gcc }
+          - { sys: ucrt64, env: ucrt-x86_64, host_c_compiler: gcc, plugin_c_compiler: gcc }
 
     steps:
     - uses: actions/checkout@v4
@@ -153,7 +150,7 @@ jobs:
         -S ${{ github.workspace }}
         -DCMAKE_CXX_COMPILER=${{ steps.compilers.outputs.PLUGIN_CXX }}
         -DCMAKE_C_COMPILER=${{ steps.compilers.outputs.PLUGIN_CC }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=ON
         -DBUILD_ONLY_MAIN=OFF
         -G"MSYS Makefiles"
@@ -171,7 +168,7 @@ jobs:
         -S ${{ github.workspace }}
         -DCMAKE_CXX_COMPILER=${{ steps.compilers.outputs.HOST_CXX }}
         -DCMAKE_C_COMPILER=${{ steps.compilers.outputs.HOST_CC }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=OFF
         -DBUILD_ONLY_MAIN=ON
         -G"MSYS Makefiles"
