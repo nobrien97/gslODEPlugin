@@ -17,6 +17,20 @@ option(BUILD_ONLY_LIBS "Only build the shared libraries" OFF)
 message("BUILD_ONLY_LIBS is ${BUILD_ONLY_LIBS}")
 message("BUILD_ONLY_MAIN is ${BUILD_ONLY_MAIN}")
 
+  # Determine the shared library extension
+  if(WIN32)
+      set(SHARED_EXT "dll")
+  else()
+      set(SHARED_EXT "so")
+  endif()
+
+# Check if libraries exist
+if(EXISTS "${PROJECT_BINARY_DIR}/libNAR.${SHARED_EXT}")
+   message("Found libNAR.${SHARED_EXT} in ${PROJECT_BINARY_DIR}")
+else()
+  message("Could not find libNAR.${SHARED_EXT} in ${PROJECT_BINARY_DIR}")
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-O3")
@@ -94,13 +108,6 @@ if(NOT BUILD_ONLY_LIBS)
   include(CTest)
   enable_testing()
   message(STATUS "${PROJECT_SOURCE_DIR}")
-
-  # Determine the shared library extension
-  if(WIN32)
-      set(SHARED_EXT "dll")
-  else()
-      set(SHARED_EXT "so")
-  endif()
 
   # Write multi file write for testing
   file(WRITE "lib_multi_test.csv"
