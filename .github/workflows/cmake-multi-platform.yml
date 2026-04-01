@@ -137,8 +137,6 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.dir_build_host }}
         -S ${{ github.workspace }}
-        -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++
-        -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=ON
         -DBUILD_ONLY_MAIN=OFF
@@ -155,8 +153,6 @@ jobs:
       run: >
         cmake --fresh -B ${{ steps.strings.outputs.dir_build_host }}
         -S ${{ github.workspace }}
-        -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++
-        -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ONLY_LIBS=OFF
         -DBUILD_ONLY_MAIN=ON
