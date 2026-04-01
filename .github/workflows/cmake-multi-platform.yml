@@ -9,7 +9,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build_unix:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -17,28 +17,10 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         build_type: [Release]
         host_c_compiler: [gcc, clang]
         plugin_c_compiler: [gcc, clang]
-        include:
-          - os: windows-latest
-            sys: mingw64
-            env: x86_64
-          - os: windows-latest
-            sys: ucrt64
-            env: ucrt-x86_64
-        #   - host_c_compiler: gcc
-        #     host_cpp_compiler: g++
-        #   - host_c_compiler: clang
-        #     host_cpp_compiler: clang++
-        #   - plugin_c_compiler: gcc
-        #     plugin_cpp_compiler: g++
-        #   - plugin_c_compiler: clang
-        #     plugin_cpp_compiler: clang++
-        # exclude:
-        # - os: windows-latest
-        #   host_c_compiler: clang
 
     steps:
     - uses: actions/checkout@v4
@@ -51,40 +33,24 @@ jobs:
         echo "dir_build_plugins=${{ github.workspace }}/build_plugins" >> "$GITHUB_OUTPUT"
         echo "dir_build_host=${{ github.workspace }}/build_host" >> "$GITHUB_OUTPUT"
 
-    - name: Setup MSYS2
-      if: matrix.os == 'windows-latest'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: ${{matrix.sys}}
-        install: >
-          mingw-w64-${{matrix.env}}-gcc
-          mingw-w64-${{matrix.env}}-clang
-          mingw-w64-${{matrix.env}}-cmake
-
     - name: Set compilers
       id: compilers
       shell: bash
-      run: >
-        PREFIX=""
-
-        if [[ "${{matrix.os}}" == "windows-latest" ]]; then
-          PREFIX=x86_64-w64-mingw32-
-        fi
-        
+      run: >        
         if [[ "${{matrix.host_c_compiler}}" == "gcc" ]]; then
-          echo "HOST_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
-          echo "HOST_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
+          echo "HOST_CC=gcc" >> $GITHUB_OUTPUT
+          echo "HOST_CXX=g++" >> $GITHUB_OUTPUT
         else
-          echo "HOST_CC=${PREFIX}clang" >> $GITHUB_OUTPUT
-          echo "HOST_CXX=${PREFIX}clang++" >> $GITHUB_OUTPUT
+          echo "HOST_CC=clang" >> $GITHUB_OUTPUT
+          echo "HOST_CXX=clang++" >> $GITHUB_OUTPUT
         fi
 
         if [[ "${{matrix.plugin_c_compiler}}" == "gcc" ]]; then
-          echo "PLUGIN_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
-          echo "PLUGIN_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
+          echo "PLUGIN_CC=gcc" >> $GITHUB_OUTPUT
+          echo "PLUGIN_CXX=g++" >> $GITHUB_OUTPUT
         else
-          echo "PLUGIN_CC=${PREFIX}clang" >> $GITHUB_OUTPUT
-          echo "PLUGIN_CXX=${PREFIX}clang++" >> $GITHUB_OUTPUT
+          echo "PLUGIN_CC=clang" >> $GITHUB_OUTPUT
+          echo "PLUGIN_CXX=clang++" >> $GITHUB_OUTPUT
         fi
         
 
@@ -133,3 +99,110 @@ jobs:
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       # run: ctest --build-config ${{ matrix.build_type }} --output-on-failure -L gh
+
+  build_windows:
+    runs-on: windows-latest
+
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
+      fail-fast: false
+
+      matrix:
+        build_type: [Release]
+        host_c_compiler: [gcc, clang]
+        plugin_c_compiler: [gcc, clang]
+        include:
+          - sys: mingw64
+            env: x86_64
+          - sys: ucrt64
+            env: ucrt-x86_64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set reusable strings
+      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+      id: strings
+      shell: bash
+      run: |
+        echo "dir_build_plugins=${{ github.workspace }}/build_plugins" >> "$GITHUB_OUTPUT"
+        echo "dir_build_host=${{ github.workspace }}/build_host" >> "$GITHUB_OUTPUT"
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        install: >
+          mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-clang
+          mingw-w64-${{matrix.env}}-cmake
+
+    - name: Set compilers
+      id: compilers
+      shell: bash
+      run: >
+        PREFIX=x86_64-w64-mingw32-
+        
+        if [[ "${{matrix.host_c_compiler}}" == "gcc" ]]; then
+          echo "HOST_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
+          echo "HOST_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
+        else
+          echo "HOST_CC=clang" >> $GITHUB_OUTPUT
+          echo "HOST_CXX=clang++" >> $GITHUB_OUTPUT
+        fi
+
+        if [[ "${{matrix.plugin_c_compiler}}" == "gcc" ]]; then
+          echo "PLUGIN_CC=${PREFIX}gcc" >> $GITHUB_OUTPUT
+          echo "PLUGIN_CXX=${PREFIX}g++" >> $GITHUB_OUTPUT
+        else
+          echo "PLUGIN_CC=clang" >> $GITHUB_OUTPUT
+          echo "PLUGIN_CXX=clang++" >> $GITHUB_OUTPUT
+        fi
+        
+
+    - name: Configure CMake plugins
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake -B ${{ steps.strings.outputs.dir_build_host }}
+        -S ${{ github.workspace }}
+        -DCMAKE_CXX_COMPILER=${{ steps.compilers.outputs.PLUGIN_CXX }}
+        -DCMAKE_C_COMPILER=${{ steps.compilers.outputs.PLUGIN_CC }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DBUILD_ONLY_LIBS=ON
+        -DBUILD_ONLY_MAIN=OFF
+        -G Ninja
+
+    - name: Build plugins
+      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      run: |
+        cmake --build ${{ steps.strings.outputs.dir_build_host }} --config ${{ matrix.build_type }}
+
+    - name: Configure CMake host
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake --fresh -B ${{ steps.strings.outputs.dir_build_host }}
+        -S ${{ github.workspace }}
+        -DCMAKE_CXX_COMPILER=${{ steps.compilers.outputs.HOST_CXX }}
+        -DCMAKE_C_COMPILER=${{ steps.compilers.outputs.HOST_CC }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DBUILD_ONLY_LIBS=OFF
+        -DBUILD_ONLY_MAIN=ON
+        -G Ninja
+
+    - name: Build host
+      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      run: |
+        cmake --build ${{ steps.strings.outputs.dir_build_host }} --config ${{ matrix.build_type }}
+
+    - name: Test
+      uses: threeal/ctest-action@v1.1.0
+      with:
+        test-dir: ${{ steps.strings.outputs.dir_build_host }}
+        build-config: ${{ matrix.build_type }}
+        args: -L gh --extra-verbose
+      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      # run: ctest --build-config ${{ matrix.build_type }} --output-on-failure -L gh
+
